@@ -1,4 +1,4 @@
-# $Id: Makefile.PL,v 1.1.1.1 2003/02/06 11:43:26 dk Exp $
+# $Id: Makefile.PL,v 1.2 2003/02/16 12:39:31 dk Exp $
 use PDL::Core::Dev;
 use ExtUtils::MakeMaker;
 use Prima::Config;
@@ -8,8 +8,8 @@ use Prima::Config;
 $hash{OBJECT}="PrimaImage\$(OBJ_EXT)";
 $hash{VERSION_FROM}="primaimage.pd";
 $hash{clean}{FILES} ='PrimaImage';
-$hash{INC} .= join( ' ' , map { $Prima::Config::Config{cincflag}.$_} @{$Prima::Config::Config{incpaths}});
-my %DEFINES=map { my @z = split('=', $_, 2); scalar(@z)?(@z):($_ => 1)} @{$Prima::Config::Config{cdefs}};
-$hash{CCFLAGS} .= join( ' ' , map { $Prima::Config::Config{cdefflag}.$_.'='.$DEFINES{$_}} keys %DEFINES);
+$hash{INC} .= " $Prima::Config::Config{inc}";
+push @{$hash{LIBS}}, $Prima::Config::Config{libs};
+$hash{DEFINE} .= " $Prima::Config::Config{define}";
 WriteMakefile(%hash);
 sub MY::postamble { pdlpp_postamble(@::pack); } 

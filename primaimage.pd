@@ -1,10 +1,10 @@
-# $Id: primaimage.pd,v 1.1.1.1 2003/02/06 11:43:26 dk Exp $
+# $Id: primaimage.pd,v 1.4 2003/02/28 17:18:29 dk Exp $
 
 use strict;
 pp_addpm({At=>'Top'},<<'EOD');
 
 BEGIN { 
-$VERSION = '1.00'; 
+$VERSION = '1.01'; 
 } 
 
 =head1 NAME
@@ -181,6 +181,8 @@ Dmitry Karasik, E<lt>dmitry@karasik.eu.orgE<gt>.
 
 =head1 SEE ALSO
 
+PDL-PrimaImage page, http://www.prima.eu.org/PDL-PrimaImage/
+
 The Prima toolkit, http://www.prima.eu.org/
 
 L<PDL>, L<Prima>, L<Prima::Image>.
@@ -198,6 +200,15 @@ pp_addhdr(<<HEADER);
 PImage_vmt CImage;
 
 static void
+repad( Byte * source, Byte * dest, int h, int srcLineSize, int dstLineSize)
+{
+   int bsc = srcLineSize > dstLineSize ? dstLineSize : srcLineSize;
+   for ( ; h > 0; h--, source += srcLineSize, dest += dstLineSize)
+      memcpy(dest, source, bsc); 
+}
+
+
+static void
 prima_image_convert( SV * imagesv, void * data, int w, int h, int image2piddle, int z, int mpixel, int type)
 {
    int bsz = (type & imBPP)/8;
@@ -210,16 +221,11 @@ prima_image_convert( SV * imagesv, void * data, int w, int h, int image2piddle, 
       z = 1;
    }
    if ( image2piddle) {
-      ibc_repad(image-> data, ( Byte *) data, 
-         image-> lineSize, bsz * w * z, 
-         image-> dataSize, bsz * w * h * z, 
-         1, 1, nil);
+      repad(image-> data, ( Byte *) data, h, image-> lineSize, bsz * w * z);
    } else {
       if ( w * z != image-> w || h != image-> h || image-> type != type)
          image-> self-> create_empty(( Handle) image, w * z, h, type);
-      ibc_repad(( Byte *) data, image-> data, 
-         bsz * w * z, image-> lineSize, 
-         bsz * w * h * z, image-> dataSize, 1, 1, nil);
+      repad(( Byte *) data, image-> data, h, bsz * w * z, image-> lineSize); 
       if ( z == 2) {
          if ( type != imFloat && type != imComplex)
             image-> self-> reset(( Handle) image, imFloat, nil, 0);
@@ -244,8 +250,10 @@ prima_image_convert( SV * imagesv, void * data, int w, int h, int image2piddle, 
 HEADER
 
 
-pp_add_boot('CImage = (PImage_vmt)gimme_the_vmt( "Prima::Image");');
-
+pp_add_boot(<<'BOOT');
+PRIMA_VERSION_BOOTCHECK;
+CImage = (PImage_vmt)gimme_the_vmt( "Prima::Image");
+BOOT
 
 pp_def('image2piddle',
         Pars => 'data(z,w,h)',
@@ -258,3 +266,4 @@ pp_def('image2piddle',
 CODE
 );
 
+pp_done();

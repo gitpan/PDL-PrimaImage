@@ -1,4 +1,4 @@
-# $Id: test.pl,v 1.1.1.1 2003/02/06 11:43:26 dk Exp $
+# $Id: test.pl,v 1.1 2003/02/06 11:43:26 dk Exp $
 use strict;
 use PDL;
 
